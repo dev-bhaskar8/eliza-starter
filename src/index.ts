@@ -39,18 +39,26 @@ let cache: ICacheManager | null = null;
 let directClient: DirectClient | null = null;
 
 // Memory management
-const MEMORY_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
-const MEMORY_THRESHOLD = 400 * 1024 * 1024; // 400MB
+const MEMORY_CHECK_INTERVAL = 1 * 60 * 1000; // 1 minute
+const MEMORY_THRESHOLD = 350 * 1024 * 1024; // 350MB
+const CRITICAL_MEMORY_THRESHOLD = 375 * 1024 * 1024; // 375MB
 
 function checkMemoryUsage() {
   const used = process.memoryUsage();
-  if (used.heapUsed > MEMORY_THRESHOLD) {
-    elizaLogger.warn(`High memory usage detected: ${Math.round(used.heapUsed / 1024 / 1024)}MB`);
+  const heapUsed = Math.round(used.heapUsed / 1024 / 1024);
+  
+  if (used.heapUsed > CRITICAL_MEMORY_THRESHOLD) {
+    elizaLogger.error(`Critical memory usage detected: ${heapUsed}MB. Initiating emergency cleanup...`);
+    cleanup();
+    process.exit(1);
+  } else if (used.heapUsed > MEMORY_THRESHOLD) {
+    elizaLogger.warn(`High memory usage detected: ${heapUsed}MB`);
     global.gc?.();
     elizaLogger.log("Garbage collection triggered");
   }
 }
 
+// More frequent memory checks
 setInterval(checkMemoryUsage, MEMORY_CHECK_INTERVAL);
 
 process.on('SIGINT', () => {
@@ -63,26 +71,68 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  elizaLogger.error('Uncaught Exception:', error);
+  cleanup();
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  elizaLogger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  cleanup();
+  process.exit(1);
+});
+
 function cleanup() {
   isShuttingDown = true;
-  if (rl) {
-    rl.close();
-    rl = null;
+  
+  try {
+    if (rl) {
+      rl.close();
+      rl = null;
+    }
+    if (db) {
+      db.close();
+      db = null;
+    }
+    if (dbAdapter) {
+      dbAdapter = null;
+    }
+    if (cache) {
+      cache = null;
+    }
+    if (directClient) {
+      directClient = null;
+    }
+    
+    // Force garbage collection
+    global.gc?.();
+    
+    // Clear module cache to free memory
+    Object.keys(require.cache).forEach((key) => {
+      delete require.cache[key];
+    });
+    
+    // Clear any intervals
+    const intervals = (global as any)[Symbol.for('nodejs.timer.intervals')];
+    if (intervals) {
+      intervals.forEach((interval: any) => {
+        clearInterval(interval);
+      });
+    }
+    
+    // Clear any timeouts
+    const timeouts = (global as any)[Symbol.for('nodejs.timer.timeouts')];
+    if (timeouts) {
+      timeouts.forEach((timeout: any) => {
+        clearTimeout(timeout);
+      });
+    }
+  } catch (error) {
+    elizaLogger.error('Error during cleanup:', error);
   }
-  if (db) {
-    db.close();
-    db = null;
-  }
-  if (dbAdapter) {
-    dbAdapter = null;
-  }
-  if (cache) {
-    cache = null;
-  }
-  if (directClient) {
-    directClient = null;
-  }
-  global.gc?.();
 }
 
 export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
@@ -298,6 +348,9 @@ async function startAgent(character: Character, client: DirectClient) {
     }
 
     client.registerAgent(runtime);
+    
+    // Force garbage collection after agent initialization
+    global.gc?.();
   } catch (error) {
     elizaLogger.error(
       `Error starting agent for character ${character.name}:`,
@@ -316,16 +369,16 @@ const startAgents = async () => {
     let charactersArg = args.characters || args.character;
 
     let characters = [character];
-    console.log("charactersArg", charactersArg);
     if (charactersArg) {
       characters = await loadCharacters(charactersArg);
     }
-    console.log("characters", characters);
 
-    // Limit concurrent character loading
+    // Limit concurrent character loading and add memory checks
     for (const character of characters) {
+      checkMemoryUsage(); // Check memory before loading each character
       await startAgent(character, client);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Add delay between character loads
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Increased delay between character loads
+      global.gc?.(); // Force GC after each character load
     }
 
     rl = readline.createInterface({
@@ -345,15 +398,18 @@ const startAgents = async () => {
             return;
           }
 
+          checkMemoryUsage(); // Check memory before processing input
           await handleUserInput(input, agentId);
-          global.gc?.(); // Trigger GC after processing input
+          global.gc?.(); // Force GC after processing input
+          
           if (!isShuttingDown) {
-            chat();
+            // Add small delay before next prompt to allow GC to work
+            setTimeout(chat, 100);
           }
         } catch (error) {
           console.error("Error handling user input:", error);
           if (!isShuttingDown) {
-            chat();
+            setTimeout(chat, 100);
           }
         }
       });
@@ -398,6 +454,9 @@ async function handleUserInput(input: string, agentId: string) {
 
     const data = await response.json();
     data.forEach((message: any) => console.log(`${agentId}: ${message.text}`));
+    
+    // Clear data after processing
+    response.body?.cancel();
   } catch (error) {
     console.error("Error fetching response:", error);
     throw error;
