@@ -1,51 +1,88 @@
-# Eliza
+# Norinder Mudi Bot
 
-## Edit the character files
+A Twitter bot that parodies the Indian PM's social media presence, featuring:
+- Tech enthusiasm
+- Love for acronyms
+- Ancient Indian wisdom claims
+- Digital India initiatives
+- Morning yoga updates
+- Surprise 8 PM announcements
 
-Open `agent/src/character.ts` to modify the default character. Uncomment and edit.
+## Setup
 
-### Custom characters
-
-To load custom characters instead:
-- Use `pnpm start --characters="path/to/your/character.json"`
-- Multiple character files can be loaded simultaneously
-
-### Add clients
-
-```diff
-- clients: [],
-+ clients: ["twitter", "discord"],
+1. Clone the repository:
+```bash
+git clone https://github.com/YOUR_USERNAME/norinder-mudi-bot.git
+cd norinder-mudi-bot
 ```
 
-## Duplicate the .env.example template
+2. Install dependencies:
+```bash
+pnpm install
+```
 
+3. Create a `.env` file:
 ```bash
 cp .env.example .env
 ```
 
-\* Fill out the .env file with your own values.
-
-### Add login credentials and keys to .env
-
-```diff
--DISCORD_APPLICATION_ID=
--DISCORD_API_TOKEN= # Bot token
-+DISCORD_APPLICATION_ID="000000772361146438"
-+DISCORD_API_TOKEN="OTk1MTU1NzcyMzYxMT000000.000000.00000000000000000000000000000000"
-...
--OPENROUTER_API_KEY=
-+OPENROUTER_API_KEY="sk-xx-xx-xxx"
-...
--TWITTER_USERNAME= # Account username
--TWITTER_PASSWORD= # Account password
--TWITTER_EMAIL= # Account email
-+TWITTER_USERNAME="username"
-+TWITTER_PASSWORD="password"
-+TWITTER_EMAIL="your@email.com"
+4. Add your credentials to `.env`:
+```env
+OPENROUTER_API_KEY=your_key
+TWITTER_USERNAME=your_username
+TWITTER_PASSWORD=your_password
+TWITTER_EMAIL=your_email
+POST_INTERVAL_MIN=6000
+POST_INTERVAL_MAX=10000
 ```
 
-## Install dependencies and start your agent
+## Running Locally
 
+Development mode:
 ```bash
-pnpm i && pnpm start
+pnpm dev
 ```
+
+Production mode:
+```bash
+pnpm start --characters="characters/norinder.character.json"
+```
+
+## Deployment
+
+### On Render
+
+1. Fork this repository
+2. Create a new Web Service on Render
+3. Connect your GitHub repository
+4. Use the following settings:
+   - Build Command: `pnpm install && pnpm build`
+   - Start Command: `pnpm start --characters="characters/norinder.character.json"`
+5. Add environment variables in Render dashboard
+
+### Using Docker
+
+Build:
+```bash
+docker build -t norinder-mudi-bot .
+```
+
+Run:
+```bash
+docker run -d --env-file .env norinder-mudi-bot
+```
+
+## Rate Limiting
+
+The bot respects API rate limits:
+- Minimum 6 seconds between requests
+- Maximum 10 requests per minute
+- Random intervals between posts
+
+## Credits
+
+Based on the [Eliza](https://github.com/ai16z/eliza) project by ai16z.
+
+## License
+
+MIT License
