@@ -28,8 +28,29 @@ import { fileURLToPath } from "url";
 import { character } from "./character.ts";
 import type { DirectClient } from "@ai16z/client-direct";
 
-const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
-const __dirname = path.dirname(__filename); // get the name of the directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+let rl: readline.Interface | null = null;
+let isShuttingDown = false;
+
+process.on('SIGINT', () => {
+  cleanup();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  cleanup();
+  process.exit(0);
+});
+
+function cleanup() {
+  isShuttingDown = true;
+  if (rl) {
+    rl.close();
+    rl = null;
+  }
+}
 
 export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
   const waitTime =
@@ -222,7 +243,6 @@ async function startAgent(character: Character, directClient: DirectClient) {
     }
 
     const db = initializeDatabase(dataDir);
-
     await db.init();
 
     const cache = intializeDbCache(character, db);
@@ -230,79 +250,90 @@ async function startAgent(character: Character, directClient: DirectClient) {
 
     await runtime.initialize();
 
-    const clients = await initializeClients(character, runtime);
+    try {
+      await initializeClients(character, runtime);
+    } catch (error) {
+      elizaLogger.warn("Failed to initialize some clients, continuing with direct chat only:", error);
+    }
 
     directClient.registerAgent(runtime);
-
-    return clients;
   } catch (error) {
     elizaLogger.error(
       `Error starting agent for character ${character.name}:`,
       error
     );
-    console.error(error);
     throw error;
   }
 }
 
 const startAgents = async () => {
-  const directClient = await DirectClientInterface.start();
-  const args = parseArguments();
-
-  let charactersArg = args.characters || args.character;
-
-  let characters = [character];
-  console.log("charactersArg", charactersArg);
-  if (charactersArg) {
-    characters = await loadCharacters(charactersArg);
-  }
-  console.log("characters", characters);
+  let directClient;
   try {
+    directClient = await DirectClientInterface.start();
+    const args = parseArguments();
+
+    let charactersArg = args.characters || args.character;
+
+    let characters = [character];
+    console.log("charactersArg", charactersArg);
+    if (charactersArg) {
+      characters = await loadCharacters(charactersArg);
+    }
+    console.log("characters", characters);
+
     for (const character of characters) {
       await startAgent(character, directClient as DirectClient);
     }
+
+    rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    function chat() {
+      if (isShuttingDown) return;
+      
+      const agentId = characters[0].name ?? "Agent";
+      rl?.question("You: ", async (input) => {
+        try {
+          if (input.toLowerCase() === "exit") {
+            cleanup();
+            process.exit(0);
+            return;
+          }
+
+          await handleUserInput(input, agentId);
+          if (!isShuttingDown) {
+            chat();
+          }
+        } catch (error) {
+          console.error("Error handling user input:", error);
+          if (!isShuttingDown) {
+            chat();
+          }
+        }
+      });
+    }
+
+    elizaLogger.log("Chat started. Type 'exit' to quit.");
+    chat();
+
   } catch (error) {
     elizaLogger.error("Error starting agents:", error);
+    cleanup();
+    process.exit(1);
   }
-
-  function chat() {
-    const agentId = characters[0].name ?? "Agent";
-    rl.question("You: ", async (input) => {
-      await handleUserInput(input, agentId);
-      if (input.toLowerCase() !== "exit") {
-        chat(); // Loop back to ask another question
-      }
-    });
-  }
-
-  elizaLogger.log("Chat started. Type 'exit' to quit.");
-  chat();
 };
 
 startAgents().catch((error) => {
   elizaLogger.error("Unhandled error in startAgents:", error);
-  process.exit(1); // Exit the process after logging
+  cleanup();
+  process.exit(1);
 });
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
-rl.on("SIGINT", () => {
-  rl.close();
-  process.exit(0);
-});
-
-async function handleUserInput(input, agentId) {
-  if (input.toLowerCase() === "exit") {
-    rl.close();
-    process.exit(0);
-    return;
-  }
-
+async function handleUserInput(input: string, agentId: string) {
   try {
-    const serverPort = parseInt(settings.SERVER_PORT || "3000");
+    const serverPort = parseInt(settings.SERVER_PORT || "3001");
 
     const response = await fetch(
       `http://localhost:${serverPort}/${agentId}/message`,
@@ -317,9 +348,14 @@ async function handleUserInput(input, agentId) {
       }
     );
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
-    data.forEach((message) => console.log(`${"Agent"}: ${message.text}`));
+    data.forEach((message: any) => console.log(`${agentId}: ${message.text}`));
   } catch (error) {
     console.error("Error fetching response:", error);
+    throw error;
   }
 }
