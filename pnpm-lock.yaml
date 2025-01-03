@@ -6,6 +6,7 @@ settings:
 
 overrides:
   onnxruntime-node: ^1.20.0
+  whatwg-url: 14.1.0
 
 importers:
 
@@ -29,6 +30,9 @@ importers:
       better-sqlite3:
         specifier: ^11.5.0
         version: 11.5.0
+      dotenv:
+        specifier: ^16.4.1
+        version: 16.4.7
       readline:
         specifier: ^1.3.0
         version: 1.3.0
@@ -171,27 +175,27 @@ packages:
   '@ai16z/adapter-sqlite@0.1.4-alpha.3':
     resolution: {integrity: sha512-EIz2lJtueAmDpUAZh+Pz+bEABkqLzch8TwtjWIyaVB80rNX0vjZZ6+AZz90sLKMpLgZs6ZpGHQxwsQa56YVEpw==}
     peerDependencies:
-      whatwg-url: 7.1.0
+      whatwg-url: 14.1.0
 
   '@ai16z/adapter-sqljs@0.1.4-alpha.3':
     resolution: {integrity: sha512-qz9uqR2SWZ/rXKM6uw+ur7e7mFr6JG00ciXe1oVCX9szFVUksw6couq3q0mrC/SEHZN4LqimDl8m88/49bvcOA==}
     peerDependencies:
-      whatwg-url: 7.1.0
+      whatwg-url: 14.1.0
 
   '@ai16z/adapter-supabase@0.1.4-alpha.3':
     resolution: {integrity: sha512-/RM6RQfMpnokz39RDCMpTC7aELB31u45jWWRXWcAY6H8FjGQ7miL6f7ejavaVtW96mAz3oyMP69JP+nYBdlu2g==}
     peerDependencies:
-      whatwg-url: 7.1.0
+      whatwg-url: 14.1.0
 
   '@ai16z/client-direct@0.1.4-alpha.3':
     resolution: {integrity: sha512-sK21Wua+X5kF9l5iKGcSF+CyGwoWYQuYQYf2FJICzKwfNfUYJZ5d6d+XgVYSSzfJY2zg7QigRAQ6fow1UebRaQ==}
     peerDependencies:
-      whatwg-url: 7.1.0
+      whatwg-url: 14.1.0
 
   '@ai16z/client-twitter@0.1.4-alpha.3':
     resolution: {integrity: sha512-WJlNHk70ZpRdPv3EjrMjdanuYPv0HBfZWSEb7V2ZyMLp+bmL5nYVG58C0wNsHQ/2Gz+Zz9YwwLvu5AP6X9JzuQ==}
     peerDependencies:
-      whatwg-url: 7.1.0
+      whatwg-url: 14.1.0
 
   '@ai16z/eliza@0.1.4-alpha.3':
     resolution: {integrity: sha512-op3uFF1SPiQAbhKg9urDPm9HJMTc07K4AOx/lF+81wJZujja2cdB28YCEk20QX1ub/NkRPa0/dhdEsQJYAGZyw==}
@@ -199,12 +203,12 @@ packages:
   '@ai16z/plugin-bootstrap@0.1.4-alpha.3':
     resolution: {integrity: sha512-/QtQNu7el34XbHHE2RHuviw/CADoO/l8EBuJEZnUiVkqpRm6sias+15vw77rOj8+/7LySOTWQ1aWWjFMI1Vplw==}
     peerDependencies:
-      whatwg-url: 7.1.0
+      whatwg-url: 14.1.0
 
   '@ai16z/plugin-image-generation@0.1.4-alpha.3':
     resolution: {integrity: sha512-YZHJk+RHx9SwKJkmJul6DCHLyDuHo5O9/lkBW8RId414adkg6dNGcrTk4aOf6qAk/CX+vT40lNfDBxqJMWO+tA==}
     peerDependencies:
-      whatwg-url: 7.1.0
+      whatwg-url: 14.1.0
 
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
@@ -1002,6 +1006,10 @@ packages:
     resolution: {integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==}
     engines: {node: '>=0.3.1'}
 
+  dotenv@16.4.7:
+    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
+    engines: {node: '>=12'}
+
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
@@ -1386,9 +1394,6 @@ packages:
 
   locate-character@3.0.0:
     resolution: {integrity: sha512-SW13ws7BjaeJ6p7Q6CO2nchbYEc3X3J6WrmTTDto7yMPqVSZTUyY5Tjbid+Ab8gLnATtygYtiDIJGQRRn2ZOiA==}
-
-  lodash.sortby@4.7.0:
-    resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
 
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
@@ -1970,12 +1975,6 @@ packages:
     resolution: {integrity: sha512-Loo5UUvLD9ScZ6jh8beX1T6sO1w2/MpCRpEP7V280GKMVUQ0Jzar2U3UJPsrdbziLEMMhu3Ujnq//rhiFuIeag==}
     engines: {node: '>=6'}
 
-  tr46@0.0.3:
-    resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
-
-  tr46@1.0.1:
-    resolution: {integrity: sha512-dTpowEjclQ7Kgx5SdBkqRzVhERQXov8/l9Ft9dVM9fmg0W0KQSVaXX9T4i6twCPNtYiZM53lpSSUAwJbFPOHxA==}
-
   tr46@5.0.0:
     resolution: {integrity: sha512-tk2G5R2KRwBd+ZN0zaEXpmzdKyOYksXwywulIX95MBODjSzMIuQnQ3m8JxgbhnL1LeVo7lqQKsYa1O3Htl7K5g==}
     engines: {node: '>=18'}
@@ -2106,12 +2105,6 @@ packages:
     resolution: {integrity: sha512-QW95TCTaHmsYfHDybGMwO5IJIM93I/6vTRk+daHTWFPhwh+C8Cg7j7XyKrwrj8Ib6vYXe0ocYNrmzY4xAAN6ug==}
     engines: {node: '>= 14'}
 
-  webidl-conversions@3.0.1:
-    resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
-
-  webidl-conversions@4.0.2:
-    resolution: {integrity: sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg==}
-
   webidl-conversions@7.0.0:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
     engines: {node: '>=12'}
@@ -2119,12 +2112,6 @@ packages:
   whatwg-url@14.1.0:
     resolution: {integrity: sha512-jlf/foYIKywAt3x/XWKZ/3rz8OSJPiWktjmk891alJUEjiVxKX9LEO92qH3hv4aJ0mN3MWPvGMCy8jQi95xK4w==}
     engines: {node: '>=18'}
-
-  whatwg-url@5.0.0:
-    resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
-
-  whatwg-url@7.1.0:
-    resolution: {integrity: sha512-WUu7Rg1DroM7oQvGWfOiAK21n74Gg+T4elXEQYkOhtyLeWiJFoOGLXPKI/9gzIie9CtwVLm8wtw6YJdKyxSjeg==}
 
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
@@ -2893,7 +2880,7 @@ snapshots:
 
   '@supabase/node-fetch@2.6.15':
     dependencies:
-      whatwg-url: 5.0.0
+      whatwg-url: 14.1.0
 
   '@supabase/postgrest-js@1.16.3':
     dependencies:
@@ -3365,6 +3352,8 @@ snapshots:
 
   diff@4.0.2: {}
 
+  dotenv@16.4.7: {}
+
   eastasianwidth@0.2.0: {}
 
   ecdsa-sig-formatter@1.0.11:
@@ -3776,8 +3765,6 @@ snapshots:
 
   locate-character@3.0.0: {}
 
-  lodash.sortby@4.7.0: {}
-
   loose-envify@1.4.0:
     dependencies:
       js-tokens: 4.0.0
@@ -3886,7 +3873,7 @@ snapshots:
 
   node-fetch@2.7.0:
     dependencies:
-      whatwg-url: 5.0.0
+      whatwg-url: 14.1.0
 
   node-gyp-build@4.8.4:
     optional: true
@@ -4206,7 +4193,7 @@ snapshots:
 
   source-map@0.8.0-beta.0:
     dependencies:
-      whatwg-url: 7.1.0
+      whatwg-url: 14.1.0
 
   sql.js@1.12.0: {}
 
@@ -4381,12 +4368,6 @@ snapshots:
       universalify: 0.2.0
       url-parse: 1.5.10
 
-  tr46@0.0.3: {}
-
-  tr46@1.0.1:
-    dependencies:
-      punycode: 2.3.1
-
   tr46@5.0.0:
     dependencies:
       punycode: 2.3.1
@@ -4505,27 +4486,12 @@ snapshots:
 
   web-streams-polyfill@4.0.0-beta.3: {}
 
-  webidl-conversions@3.0.1: {}
-
-  webidl-conversions@4.0.2: {}
-
   webidl-conversions@7.0.0: {}
 
   whatwg-url@14.1.0:
     dependencies:
       tr46: 5.0.0
       webidl-conversions: 7.0.0
-
-  whatwg-url@5.0.0:
-    dependencies:
-      tr46: 0.0.3
-      webidl-conversions: 3.0.1
-
-  whatwg-url@7.1.0:
-    dependencies:
-      lodash.sortby: 4.7.0
-      tr46: 1.0.1
-      webidl-conversions: 4.0.2
 
   which@2.0.2:
     dependencies:

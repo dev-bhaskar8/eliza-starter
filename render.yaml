@@ -9,6 +9,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 22.0.0
+      - key: SERVER_PORT
+        value: 3000
       - key: OPENROUTER_API_KEY
         sync: false
       - key: TWITTER_USERNAME
