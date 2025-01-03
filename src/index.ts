@@ -33,6 +33,25 @@ const __dirname = path.dirname(__filename);
 
 let rl: readline.Interface | null = null;
 let isShuttingDown = false;
+let db: Database.Database | null = null;
+let dbAdapter: SqliteDatabaseAdapter | null = null;
+let cache: ICacheManager | null = null;
+let directClient: DirectClient | null = null;
+
+// Memory management
+const MEMORY_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const MEMORY_THRESHOLD = 400 * 1024 * 1024; // 400MB
+
+function checkMemoryUsage() {
+  const used = process.memoryUsage();
+  if (used.heapUsed > MEMORY_THRESHOLD) {
+    elizaLogger.warn(`High memory usage detected: ${Math.round(used.heapUsed / 1024 / 1024)}MB`);
+    global.gc?.();
+    elizaLogger.log("Garbage collection triggered");
+  }
+}
+
+setInterval(checkMemoryUsage, MEMORY_CHECK_INTERVAL);
 
 process.on('SIGINT', () => {
   cleanup();
@@ -50,6 +69,20 @@ function cleanup() {
     rl.close();
     rl = null;
   }
+  if (db) {
+    db.close();
+    db = null;
+  }
+  if (dbAdapter) {
+    dbAdapter = null;
+  }
+  if (cache) {
+    cache = null;
+  }
+  if (directClient) {
+    directClient = null;
+  }
+  global.gc?.();
 }
 
 export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
@@ -161,10 +194,15 @@ export function getTokenForProvider(
   }
 }
 
-function initializeDatabase(dataDir: string) {
-  const filePath = process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
-  const db = new SqliteDatabaseAdapter(new Database(filePath));
-  return db;
+function initializeDatabase(dataDir: string): SqliteDatabaseAdapter {
+  if (dbAdapter) {
+    return dbAdapter;
+  }
+  db = new Database(path.join(dataDir, "cache.db"), {
+    verbose: console.log,
+  });
+  dbAdapter = new SqliteDatabaseAdapter(db);
+  return dbAdapter;
 }
 
 export async function initializeClients(
@@ -225,12 +263,15 @@ function intializeFsCache(baseDir: string, character: Character) {
   return cache;
 }
 
-function intializeDbCache(character: Character, db: IDatabaseCacheAdapter) {
-  const cache = new CacheManager(new DbCacheAdapter(db, character.id));
+function intializeDbCache(character: Character, db: SqliteDatabaseAdapter): ICacheManager {
+  if (cache) {
+    return cache;
+  }
+  cache = new CacheManager(new DbCacheAdapter(db, character.id));
   return cache;
 }
 
-async function startAgent(character: Character, directClient: DirectClient) {
+async function startAgent(character: Character, client: DirectClient) {
   try {
     character.id ??= stringToUuid(character.name);
     character.username ??= character.name;
@@ -256,7 +297,7 @@ async function startAgent(character: Character, directClient: DirectClient) {
       elizaLogger.warn("Failed to initialize some clients, continuing with direct chat only:", error);
     }
 
-    directClient.registerAgent(runtime);
+    client.registerAgent(runtime);
   } catch (error) {
     elizaLogger.error(
       `Error starting agent for character ${character.name}:`,
@@ -267,9 +308,9 @@ async function startAgent(character: Character, directClient: DirectClient) {
 }
 
 const startAgents = async () => {
-  let directClient;
   try {
-    directClient = await DirectClientInterface.start();
+    const client = await DirectClientInterface.start() as DirectClient;
+    directClient = client;
     const args = parseArguments();
 
     let charactersArg = args.characters || args.character;
@@ -281,8 +322,10 @@ const startAgents = async () => {
     }
     console.log("characters", characters);
 
+    // Limit concurrent character loading
     for (const character of characters) {
-      await startAgent(character, directClient as DirectClient);
+      await startAgent(character, client);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Add delay between character loads
     }
 
     rl = readline.createInterface({
@@ -303,6 +346,7 @@ const startAgents = async () => {
           }
 
           await handleUserInput(input, agentId);
+          global.gc?.(); // Trigger GC after processing input
           if (!isShuttingDown) {
             chat();
           }
