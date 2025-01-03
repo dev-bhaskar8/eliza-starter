@@ -2,7 +2,7 @@ services:
   - type: web
     name: norinder-mudi-bot
     env: node
-    region: singapore  # or choose your preferred region
+    region: singapore
     plan: free
     buildCommand: pnpm install --no-frozen-lockfile && pnpm build
     startCommand: pnpm start --characters="characters/norinder.character.json"
@@ -10,7 +10,7 @@ services:
       - key: NODE_VERSION
         value: 22.0.0
       - key: SERVER_PORT
-        value: 3000
+        value: 3001
       - key: OPENROUTER_API_KEY
         sync: false
       - key: TWITTER_USERNAME
@@ -23,4 +23,5 @@ services:
         value: 6000
       - key: POST_INTERVAL_MAX
         value: 10000
+    healthCheckPath: /health
     autoDeploy: true 
