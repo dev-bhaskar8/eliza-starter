@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: norinder-mudi-bot
+    env: node
+    region: singapore  # or choose your preferred region
+    plan: free
+    buildCommand: pnpm install && pnpm build
+    startCommand: pnpm start --characters="characters/norinder.character.json"
+    envVars:
+      - key: NODE_VERSION
+        value: 22.0.0
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: TWITTER_USERNAME
+        sync: false
+      - key: TWITTER_PASSWORD
+        sync: false
+      - key: TWITTER_EMAIL
+        sync: false
+      - key: POST_INTERVAL_MIN
+        value: 6000
+      - key: POST_INTERVAL_MAX
+        value: 10000
+    autoDeploy: true 
