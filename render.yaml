@@ -4,7 +4,7 @@ services:
     env: node
     region: singapore  # or choose your preferred region
     plan: free
-    buildCommand: npm install -g pnpm && pnpm install --no-frozen-lockfile && pnpm build
+    buildCommand: pnpm install --no-frozen-lockfile && pnpm build
     startCommand: pnpm start --characters="characters/norinder.character.json"
     envVars:
       - key: NODE_VERSION
